@@ -254,8 +254,20 @@ export const career: CareerEntry[] = [
     location: 'Austin, TX',
     roles: [
       {
-        title: 'Sr. Software Engineering Manager',
+        title: 'Engineering Manager',
         startDate: '2014-12',
+        endDate: '2017-03',
+        description:
+          'Managed engineering teams during early tenure at Blackbaud. Established agile foundations and contributed to early platform initiatives.',
+        workType: ['modernization'],
+        architecturePatterns: [],
+        teamComposition: {},
+        impactMetrics: [],
+        inferred: ['description', 'teamComposition'],
+      },
+      {
+        title: 'Sr. Software Engineering Manager',
+        startDate: '2017-04',
         endDate: '2020-06',
         description:
           'Transformed engineering from SCRUM-Waterfall with quarterly deployments to a fully Agile department with TDD, clean code standards, and 80% minimum code coverage. Led the early Kafka cluster team and built the recurring giving service for RENXT. Migrated cloud infrastructure from AWS to Azure.',
