@@ -14,6 +14,8 @@ const PALETTE = [
   '#8b5cf6', // violet
 ]
 
+type ViewMode = 'proportional' | 'equal'
+
 function presentDate(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -30,6 +32,7 @@ interface Props {
 
 export function CareerTimeline({ entries, width }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>('proportional')
 
   const totalMonths = monthOffset(presentDate())
   const xScale = scaleLinear().domain([0, totalMonths]).range([0, width])
@@ -47,49 +50,119 @@ export function CareerTimeline({ entries, width }: Props) {
     ...breakEntries.map(breakAsEntry),
   ])
 
-  const yearTicks: number[] = []
-  const startYear = 2015
-  const endYear = new Date().getFullYear() + 1
-  for (let y = startYear; y <= endYear; y++) {
-    yearTicks.push(y)
+  const slotWidth = width / orderedEntries.length
+
+  function getBarGeometry(entry: CareerEntry, slotIndex: number) {
+    if (viewMode === 'proportional') {
+      const firstStart = entry.roles[0].startDate
+      const lastEnd = entry.roles[entry.roles.length - 1].endDate
+      const barStart = xScale(monthOffset(firstStart))
+      const barEnd = xScale(monthOffset(lastEnd === 'present' ? presentDate() : lastEnd))
+      return { barStart, barWidth: barEnd - barStart }
+    }
+    return { barStart: slotIndex * slotWidth, barWidth: slotWidth }
   }
+
+  function getRoleGeometry(role: { startDate: string; endDate: string | 'present' }, barStart: number, barWidth: number, entryStart: string, entryEnd: string) {
+    if (viewMode === 'proportional') {
+      const x = xScale(monthOffset(role.startDate))
+      const end = role.endDate === 'present' ? presentDate() : role.endDate
+      return { x, w: Math.max(xScale(monthOffset(end)) - x, 2) }
+    }
+    const entryDuration = calculateDuration(entryStart, entryEnd === 'present' ? presentDate() : entryEnd)
+    const roleOffset = calculateDuration(entryStart, role.startDate)
+    const roleDuration = calculateDuration(role.startDate, role.endDate === 'present' ? presentDate() : role.endDate)
+    const x = barStart + (entryDuration > 0 ? (roleOffset / entryDuration) * barWidth : 0)
+    const w = Math.max(entryDuration > 0 ? (roleDuration / entryDuration) * barWidth : barWidth, 2)
+    return { x, w }
+  }
+
+  const yearTicks: number[] = []
+  for (let y = 2015; y <= new Date().getFullYear() + 1; y++) yearTicks.push(y)
 
   function toggleExpand(id: string) {
     setExpandedId(prev => (prev === id ? null : id))
   }
 
+  const toggleStyle = (active: boolean, color = '#111827'): React.CSSProperties => ({
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    padding: '3px 10px',
+    border: `1px solid ${color}`,
+    background: active ? color : 'transparent',
+    color: active ? 'white' : color,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  })
+
   return (
     <div style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", width }}>
-      {/* Time axis */}
-      <svg width={width} height={24} style={{ display: 'block', marginBottom: 8 }}>
-        {yearTicks.map(year => {
-          const x = xScale(monthOffset(`${year}-01`))
-          return (
-            <g key={year}>
-              <line x1={x} y1={0} x2={x} y2={10} stroke="#374151" strokeWidth={1} />
-              <text x={x + 4} y={20} fontSize={10} fill="#6b7280" letterSpacing={1}>
-                {year}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
+      {/* View toggle */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4, marginBottom: 12 }}>
+        <button
+          data-testid="toggle-proportional"
+          aria-pressed={viewMode === 'proportional'}
+          onClick={() => setViewMode('proportional')}
+          style={toggleStyle(viewMode === 'proportional')}
+        >
+          PROPORTIONAL
+        </button>
+        <button
+          data-testid="toggle-equal"
+          aria-pressed={viewMode === 'equal'}
+          onClick={() => setViewMode('equal')}
+          style={toggleStyle(viewMode === 'equal')}
+        >
+          EQUAL WIDTH
+        </button>
+      </div>
+
+      {/* Time axis — only meaningful in proportional mode */}
+      {viewMode === 'proportional' && (
+        <svg width={width} height={24} style={{ display: 'block', marginBottom: 8 }}>
+          {yearTicks.map(year => {
+            const x = xScale(monthOffset(`${year}-01`))
+            return (
+              <g key={year}>
+                <line x1={x} y1={0} x2={x} y2={10} stroke="#d1d5db" strokeWidth={1} />
+                <text x={x + 4} y={20} fontSize={10} fill="#9ca3af" letterSpacing={1}>
+                  {year}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+      )}
+
+      {/* Equal mode: company name ticks along the bottom axis */}
+      {viewMode === 'equal' && (
+        <div style={{ height: 24, marginBottom: 8, position: 'relative' }}>
+          {orderedEntries.filter(e => !e.isBreak).map((_, i) => {
+            const x = i * slotWidth
+            return (
+              <div key={i} style={{ position: 'absolute', left: x, top: 0, width: slotWidth }}>
+                <svg width={slotWidth} height={24}>
+                  <line x1={0} y1={0} x2={0} y2={10} stroke="#d1d5db" strokeWidth={1} />
+                </svg>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Company rows */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {orderedEntries.map((entry, i) => {
           if (entry.isBreak) {
+            if (viewMode === 'equal') return null
             const x = xScale(monthOffset(entry.breakStartDate!))
             const w = xScale(monthOffset(entry.breakEndDate!)) - x
             return (
               <div key={entry.id} style={{ position: 'relative', height: 32 }}>
                 <svg width={width} height={32} style={{ position: 'absolute', top: 0, left: 0 }}>
-                  <rect
-                    data-testid="break-bar"
-                    x={x} y={4} width={w} height={24}
-                    fill="#1f2937" rx={2}
-                  />
-                  <text x={x + w / 2} y={20} textAnchor="middle" fontSize={9} fill="#6b7280" letterSpacing={0.5}>
+                  <rect data-testid="break-bar" x={x} y={4} width={w} height={24} fill="#e5e7eb" rx={2} />
+                  <text x={x + w / 2} y={20} textAnchor="middle" fontSize={9} fill="#9ca3af" letterSpacing={0.5}>
                     {entry.breakReason?.toUpperCase()}
                   </text>
                 </svg>
@@ -100,6 +173,9 @@ export function CareerTimeline({ entries, width }: Props) {
           const color = PALETTE[i % PALETTE.length]
           const isExpanded = expandedId === entry.id
           const allMetrics = entry.roles.flatMap(r => r.impactMetrics ?? [])
+          const entryStart = entry.roles[0].startDate
+          const entryEnd = entry.roles[entry.roles.length - 1].endDate
+          const { barStart, barWidth } = getBarGeometry(entry, i)
 
           return (
             <div key={entry.id}>
@@ -110,9 +186,7 @@ export function CareerTimeline({ entries, width }: Props) {
               >
                 <svg width={width} height={52} style={{ position: 'absolute', top: 0, left: 0 }}>
                   {entry.roles.map(role => {
-                    const end = role.endDate === 'present' ? presentDate() : role.endDate
-                    const x = xScale(monthOffset(role.startDate))
-                    const w = Math.max(xScale(monthOffset(end)) - x, 2)
+                    const { x, w } = getRoleGeometry(role, barStart, barWidth, entryStart, entryEnd)
                     return (
                       <g key={role.startDate}>
                         <rect
@@ -133,8 +207,13 @@ export function CareerTimeline({ entries, width }: Props) {
                   data-testid="company-row"
                   style={{
                     position: 'absolute',
-                    left: xScale(monthOffset(entry.roles[0].startDate)),
+                    left: barStart,
                     top: 2,
+                    width: barWidth,
+                    border: `1px solid ${color}`,
+                    padding: '1px 6px',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
                     pointerEvents: 'none',
                   }}
                 >
@@ -146,6 +225,10 @@ export function CareerTimeline({ entries, width }: Props) {
                       letterSpacing: '0.08em',
                       color: color,
                       textTransform: 'uppercase',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: 'block',
                     }}
                   >
                     {entry.company.toUpperCase()}
@@ -157,14 +240,14 @@ export function CareerTimeline({ entries, width }: Props) {
                 <div
                   data-testid={`expanded-${entry.id}`}
                   style={{
-                    marginLeft: xScale(monthOffset(entry.roles[0].startDate)),
+                    marginLeft: barStart,
                     marginBottom: 8,
                     padding: '12px 16px',
                     borderLeft: `2px solid ${color}`,
-                    background: '#111827',
+                    background: '#f9fafb',
                   }}
                 >
-                  <p style={{ fontSize: 12, color: '#d1d5db', marginBottom: allMetrics.length ? 10 : 0, lineHeight: 1.6 }}>
+                  <p style={{ fontSize: 12, color: '#374151', marginBottom: allMetrics.length ? 10 : 0, lineHeight: 1.6 }}>
                     {entry.roles[entry.roles.length - 1].description}
                   </p>
                   {allMetrics.length > 0 && (

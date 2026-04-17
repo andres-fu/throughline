@@ -72,4 +72,31 @@ describe('CareerTimeline', () => {
     render(<CareerTimeline entries={career} width={1100} />)
     expect(screen.queryByTestId('company-row-career-break-2024')).not.toBeInTheDocument()
   })
+
+  describe('view mode toggle', () => {
+    it('renders a view mode toggle', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      expect(screen.getByTestId('toggle-proportional')).toBeInTheDocument()
+      expect(screen.getByTestId('toggle-equal')).toBeInTheDocument()
+    })
+
+    it('defaults to proportional mode', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      expect(screen.getByTestId('toggle-proportional')).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByTestId('toggle-equal')).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('switches to equal mode on click', async () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      await userEvent.click(screen.getByTestId('toggle-equal'))
+      expect(screen.getByTestId('toggle-equal')).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByTestId('toggle-proportional')).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('still renders all company rows after switching modes', async () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      await userEvent.click(screen.getByTestId('toggle-equal'))
+      expect(screen.getAllByTestId('company-row')).toHaveLength(5)
+    })
+  })
 })
