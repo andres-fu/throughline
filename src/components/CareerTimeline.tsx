@@ -135,34 +135,35 @@ export function CareerTimeline({ entries, width }: Props) {
         </svg>
       )}
 
-      {/* Equal mode: company name ticks along the bottom axis */}
+      {/* Equal mode: slot dividers */}
       {viewMode === 'equal' && (
-        <div style={{ height: 24, marginBottom: 8, position: 'relative' }}>
-          {orderedEntries.filter(e => !e.isBreak).map((_, i) => {
-            const x = i * slotWidth
-            return (
-              <div key={i} style={{ position: 'absolute', left: x, top: 0, width: slotWidth }}>
-                <svg width={slotWidth} height={24}>
-                  <line x1={0} y1={0} x2={0} y2={10} stroke="#d1d5db" strokeWidth={1} />
-                </svg>
-              </div>
-            )
-          })}
-        </div>
+        <svg width={width} height={24} style={{ display: 'block', marginBottom: 8 }}>
+          {orderedEntries.map((_, i) => (
+            <line key={i} x1={i * slotWidth} y1={0} x2={i * slotWidth} y2={10} stroke="#d1d5db" strokeWidth={1} />
+          ))}
+        </svg>
       )}
 
       {/* Company rows */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {orderedEntries.map((entry, i) => {
           if (entry.isBreak) {
-            if (viewMode === 'equal') return null
-            const x = xScale(monthOffset(entry.breakStartDate!))
-            const w = xScale(monthOffset(entry.breakEndDate!)) - x
+            const bx = viewMode === 'proportional'
+              ? xScale(monthOffset(entry.breakStartDate!))
+              : i * slotWidth
+            const bw = viewMode === 'proportional'
+              ? xScale(monthOffset(entry.breakEndDate!)) - bx
+              : slotWidth
             return (
-              <div key={entry.id} style={{ position: 'relative', height: 32 }}>
-                <svg width={width} height={32} style={{ position: 'absolute', top: 0, left: 0 }}>
-                  <rect data-testid="break-bar" x={x} y={4} width={w} height={24} fill="#e5e7eb" rx={2} />
-                  <text x={x + w / 2} y={20} textAnchor="middle" fontSize={9} fill="#9ca3af" letterSpacing={0.5}>
+              <div key={entry.id} style={{ position: 'relative', height: 72 }}>
+                <svg width={width} height={72} style={{ position: 'absolute', top: 0, left: 0 }}>
+                  <defs>
+                    <clipPath id={`clip-break-${entry.id}`}>
+                      <rect x={bx + 4} y={30} width={Math.max(bw - 8, 0)} height={36} />
+                    </clipPath>
+                  </defs>
+                  <rect data-testid="break-bar" x={bx} y={30} width={bw} height={36} fill="#e5e7eb" rx={2} />
+                  <text x={bx + 8} y={52} fontSize={9} fill="#9ca3af" letterSpacing={0.5} clipPath={`url(#clip-break-${entry.id})`}>
                     {entry.breakReason?.toUpperCase()}
                   </text>
                 </svg>
@@ -182,20 +183,33 @@ export function CareerTimeline({ entries, width }: Props) {
               <div
                 data-testid={`company-row-${entry.id}`}
                 onClick={() => toggleExpand(entry.id)}
-                style={{ position: 'relative', height: 52, cursor: 'pointer' }}
+                style={{ position: 'relative', height: 72, cursor: 'pointer' }}
               >
-                <svg width={width} height={52} style={{ position: 'absolute', top: 0, left: 0 }}>
+                <svg width={width} height={72} style={{ position: 'absolute', top: 0, left: 0 }}>
+                  <defs>
+                    {entry.roles.map(role => {
+                      const { x, w } = getRoleGeometry(role, barStart, barWidth, entryStart, entryEnd)
+                      return (
+                        <clipPath key={role.startDate} id={`clip-${entry.id}-${role.startDate}`}>
+                          <rect x={x + 4} y={30} width={Math.max(w - 8, 0)} height={36} />
+                        </clipPath>
+                      )
+                    })}
+                  </defs>
                   {entry.roles.map(role => {
                     const { x, w } = getRoleGeometry(role, barStart, barWidth, entryStart, entryEnd)
                     return (
                       <g key={role.startDate}>
                         <rect
                           data-testid="role-segment"
-                          x={x} y={20} width={w} height={28}
+                          x={x} y={30} width={w} height={36}
                           fill={color} rx={2} opacity={0.9}
                         />
-                        {w > 60 && (
-                          <text x={x + 8} y={38} fontSize={10} fill="white" opacity={0.9}>
+                        {w > 24 && (
+                          <text
+                            x={x + 8} y={52} fontSize={10} fill="white" opacity={0.9}
+                            clipPath={`url(#clip-${entry.id}-${role.startDate})`}
+                          >
                             {role.title}
                           </text>
                         )}
@@ -210,6 +224,7 @@ export function CareerTimeline({ entries, width }: Props) {
                     left: barStart,
                     top: 2,
                     width: barWidth,
+                    height: 26,
                     border: `1px solid ${color}`,
                     padding: '1px 6px',
                     boxSizing: 'border-box',
@@ -233,6 +248,11 @@ export function CareerTimeline({ entries, width }: Props) {
                   >
                     {entry.company.toUpperCase()}
                   </span>
+                  {viewMode === 'equal' && (
+                    <span style={{ fontSize: 9, color: '#9ca3af', display: 'block', letterSpacing: '0.04em' }}>
+                      {entryStart.split('-')[0]} — {entryEnd === 'present' ? 'NOW' : entryEnd.split('-')[0]}
+                    </span>
+                  )}
                 </div>
               </div>
 
