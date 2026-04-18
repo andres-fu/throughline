@@ -130,7 +130,7 @@ export function CareerTimeline({ entries, width }: Props) {
   })
 
   return (
-    <div style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", width }}>
+    <div style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", width: width + 32, position: 'relative' }}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4, marginBottom: 12 }}>
         <button
           data-testid="toggle-proportional"
@@ -151,18 +151,24 @@ export function CareerTimeline({ entries, width }: Props) {
       </div>
 
       {viewMode === 'proportional' && (
-        <svg width={width} height={24} style={{ display: 'block', marginBottom: 8 }}>
-          {yearTicks.map(year => {
-            const x = xScale(monthOffset(`${year}-01`))
-            return (
-              <g key={year}>
-                <line x1={x} y1={0} x2={x} y2={10} stroke="#d1d5db" strokeWidth={1} />
-                <text x={x + 4} y={20} fontSize={10} fill="#9ca3af" letterSpacing={1}>
-                  {year}
-                </text>
-              </g>
-            )
-          })}
+        <svg width={width + 32} height={24} style={{ display: 'block', marginBottom: 8 }}>
+          {yearTicks
+            .filter(year => width + 16 - xScale(monthOffset(`${year}-01`)) > 50)
+            .map(year => {
+              const x = xScale(monthOffset(`${year}-01`))
+              return (
+                <g key={year}>
+                  <line x1={x} y1={0} x2={x} y2={10} stroke="#d1d5db" strokeWidth={1} />
+                  <text x={x + 4} y={20} fontSize={10} fill="#9ca3af" letterSpacing={1}>
+                    {year}
+                  </text>
+                </g>
+              )
+            })}
+          <line x1={width + 16} y1={0} x2={width + 16} y2={10} stroke="#ef4444" strokeWidth={1.5} />
+          <text x={width + 16} y={20} fontSize={10} fill="#ef4444" textAnchor="middle" letterSpacing={1}>
+            NOW
+          </text>
         </svg>
       )}
 
@@ -174,7 +180,22 @@ export function CareerTimeline({ entries, width }: Props) {
         </svg>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative' }}>
+        {viewMode === 'proportional' && (
+          <div
+            data-testid="now-marker"
+            style={{
+              position: 'absolute',
+              left: width + 14,
+              top: 0,
+              bottom: 0,
+              width: 3,
+              background: '#ef4444',
+              opacity: 0.35,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
         {orderedEntries.map((entry, i) => {
           if (entry.isBreak) {
             const bx = viewMode === 'proportional'
@@ -184,16 +205,25 @@ export function CareerTimeline({ entries, width }: Props) {
               ? xScale(monthOffset(entry.breakEndDate!)) - bx
               : slotWidth
             return (
-              <div key={entry.id} style={{ position: 'relative', height: 72 }}>
-                <svg width={width} height={72} style={{ position: 'absolute', top: 0, left: 0 }}>
+              <div key={entry.id} style={{ position: 'relative', height: 36 }}>
+                <svg width={width} height={36} style={{ position: 'absolute', top: 0, left: 0 }}>
                   <defs>
                     <clipPath id={`clip-break-${entry.id}`}>
-                      <rect x={bx + 4} y={36} width={Math.max(bw - 8, 0)} height={36} />
+                      <rect x={bx + 4} y={0} width={Math.max(bw - 8, 0)} height={36} />
                     </clipPath>
                   </defs>
-                  <rect data-testid="break-bar" x={bx} y={36} width={bw} height={36} fill="#e5e7eb" rx={2} />
-                  <text x={bx + 8} y={58} fontSize={9} fill="#9ca3af" letterSpacing={0.5} clipPath={`url(#clip-break-${entry.id})`}>
-                    {entry.breakReason?.toUpperCase()}
+                  <rect
+                    data-testid="break-bar"
+                    x={bx} y={0} width={bw} height={36}
+                    fill="#f9fafb" stroke="#9ca3af" strokeWidth={1} strokeDasharray="4 3" rx={2}
+                  />
+                  <text
+                    data-testid="break-reason"
+                    x={bx + 8} y={22} fontSize={9} fill="#9ca3af"
+                    fontStyle="italic" letterSpacing={0.3}
+                    clipPath={`url(#clip-break-${entry.id})`}
+                  >
+                    {entry.breakReason?.toLowerCase()}
                   </text>
                 </svg>
               </div>
@@ -301,7 +331,6 @@ export function CareerTimeline({ entries, width }: Props) {
                   padding: '6px 8px 8px',
                   boxSizing: 'border-box',
                   background: '#fafafa',
-                  marginBottom: 8,
                 }}
               >
                 <div style={chipRow(5)}>

@@ -17,6 +17,11 @@ describe('CareerTimeline', () => {
     expect(breakBars).toHaveLength(1)
   })
 
+  it('renders break reason in lowercase', () => {
+    render(<CareerTimeline entries={career} width={1100} />)
+    expect(screen.getByTestId('break-reason')).toHaveTextContent('caregiving for a parent in palliative care')
+  })
+
   it('renders two role segments for Blackbaud', () => {
     render(<CareerTimeline entries={career} width={1100} />)
     const blackbaudRow = screen.getByTestId('company-row-blackbaud')
@@ -90,6 +95,19 @@ describe('CareerTimeline', () => {
     it('does not render a metadata lane for the career break', () => {
       render(<CareerTimeline entries={career} width={1100} />)
       expect(screen.queryByTestId('metadata-lane-career-break-2024')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('NOW marker', () => {
+    it('renders a NOW marker in proportional mode', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      expect(screen.getByTestId('now-marker')).toBeInTheDocument()
+    })
+
+    it('does not render a NOW marker in equal-width mode', async () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      await userEvent.click(screen.getByTestId('toggle-equal'))
+      expect(screen.queryByTestId('now-marker')).not.toBeInTheDocument()
     })
   })
 
