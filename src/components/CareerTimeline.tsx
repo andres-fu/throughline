@@ -60,7 +60,16 @@ function chip(color: string, outline = false): React.CSSProperties {
 }
 
 function chipRow(marginBottom?: number): React.CSSProperties {
-  return { display: 'flex', gap: 4, flexWrap: 'wrap', ...(marginBottom ? { marginBottom } : {}) }
+  return { display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', ...(marginBottom ? { marginBottom } : {}) }
+}
+
+const laneLabel: React.CSSProperties = {
+  fontSize: 8,
+  fontWeight: 700,
+  letterSpacing: '0.1em',
+  color: '#9ca3af',
+  whiteSpace: 'nowrap',
+  minWidth: 36,
 }
 
 interface Props {
@@ -357,6 +366,7 @@ export function CareerTimeline({ entries, width }: Props) {
                 }}
               >
                 <div style={chipRow(5)}>
+                  <span style={laneLabel}>TYPE</span>
                   <span style={chip(COMPANY_TYPE_COLORS[entry.companyType])}>{entry.companyType}</span>
                   {entry.companyStage !== entry.companyType && (
                     <span style={chip(COMPANY_STAGE_COLORS[entry.companyStage])}>{entry.companyStage}</span>
@@ -365,6 +375,7 @@ export function CareerTimeline({ entries, width }: Props) {
 
                 {allWorkTypes.length > 0 && (
                   <div style={chipRow(5)}>
+                    <span style={laneLabel}>WORK</span>
                     {allWorkTypes.map(wt => (
                       <span key={wt} style={chip(WORK_TYPE_COLOR, true)}>{wt}</span>
                     ))}
@@ -373,6 +384,7 @@ export function CareerTimeline({ entries, width }: Props) {
 
                 {teamChips.length > 0 && (
                   <div style={chipRow(5)}>
+                    <span style={laneLabel}>TEAM</span>
                     {teamChips.map(t => (
                       <span key={t} style={chip('#6b7280', true)}>{t}</span>
                     ))}
@@ -381,6 +393,7 @@ export function CareerTimeline({ entries, width }: Props) {
 
                 {allTech.length > 0 && (
                   <div style={chipRow()}>
+                    <span style={laneLabel}>STACK</span>
                     {allTech.map(t => (
                       <span key={t} style={chip(TECH_COLOR, true)}>{t}</span>
                     ))}
