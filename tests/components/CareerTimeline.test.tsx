@@ -36,41 +36,61 @@ describe('CareerTimeline', () => {
     expect(screen.getByText('Sr. Software Engineering Manager')).toBeInTheDocument()
   })
 
-  it('does not show expanded content before clicking', () => {
-    render(<CareerTimeline entries={career} width={1100} />)
-    expect(screen.queryByTestId('expanded-blackbaud')).not.toBeInTheDocument()
-  })
-
-  it('shows expanded content when a company row is clicked', async () => {
-    render(<CareerTimeline entries={career} width={1100} />)
-    await userEvent.click(screen.getByTestId('company-row-blackbaud'))
-    expect(screen.getByTestId('expanded-blackbaud')).toBeInTheDocument()
-  })
-
-  it('shows impact metrics in expanded content', async () => {
-    render(<CareerTimeline entries={career} width={1100} />)
-    await userEvent.click(screen.getByTestId('company-row-blackbaud'))
-    expect(screen.getByText('$4M/yr')).toBeInTheDocument()
-  })
-
-  it('collapses when clicked a second time', async () => {
-    render(<CareerTimeline entries={career} width={1100} />)
-    await userEvent.click(screen.getByTestId('company-row-blackbaud'))
-    await userEvent.click(screen.getByTestId('company-row-blackbaud'))
-    expect(screen.queryByTestId('expanded-blackbaud')).not.toBeInTheDocument()
-  })
-
-  it('only one company is expanded at a time', async () => {
-    render(<CareerTimeline entries={career} width={1100} />)
-    await userEvent.click(screen.getByTestId('company-row-blackbaud'))
-    await userEvent.click(screen.getByTestId('company-row-shippo'))
-    expect(screen.queryByTestId('expanded-blackbaud')).not.toBeInTheDocument()
-    expect(screen.getByTestId('expanded-shippo')).toBeInTheDocument()
-  })
-
   it('does not render a company row for the career break', () => {
     render(<CareerTimeline entries={career} width={1100} />)
     expect(screen.queryByTestId('company-row-career-break-2024')).not.toBeInTheDocument()
+  })
+
+  it('does not render a click-to-expand panel', async () => {
+    render(<CareerTimeline entries={career} width={1100} />)
+    await userEvent.click(screen.getByTestId('company-row-blackbaud'))
+    expect(screen.queryByTestId('expanded-blackbaud')).not.toBeInTheDocument()
+  })
+
+  describe('metadata lanes', () => {
+    it('renders a metadata lane for each non-break entry', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      expect(screen.getByTestId('metadata-lane-blackbaud')).toBeInTheDocument()
+      expect(screen.getByTestId('metadata-lane-dealerware')).toBeInTheDocument()
+      expect(screen.getByTestId('metadata-lane-shippo')).toBeInTheDocument()
+      expect(screen.getByTestId('metadata-lane-heb-digital')).toBeInTheDocument()
+      expect(screen.getByTestId('metadata-lane-ai-grants')).toBeInTheDocument()
+    })
+
+    it('shows company type in the metadata lane', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      const lane = screen.getByTestId('metadata-lane-blackbaud')
+      expect(lane).toHaveTextContent('enterprise')
+    })
+
+    it('shows company stage in the metadata lane', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      const lane = screen.getByTestId('metadata-lane-dealerware')
+      expect(lane).toHaveTextContent('growth')
+    })
+
+    it('shows all unique work types across roles', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      const lane = screen.getByTestId('metadata-lane-blackbaud')
+      expect(lane).toHaveTextContent('modernization')
+      expect(lane).toHaveTextContent('platform')
+      expect(lane).toHaveTextContent('devops')
+    })
+
+    it('shows all tech stack items', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      const lane = screen.getByTestId('metadata-lane-blackbaud')
+      expect(lane).toHaveTextContent('Java')
+      expect(lane).toHaveTextContent('Spring Boot')
+      expect(lane).toHaveTextContent('Kafka')
+      expect(lane).toHaveTextContent('AWS')
+      expect(lane).toHaveTextContent('Azure')
+    })
+
+    it('does not render a metadata lane for the career break', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      expect(screen.queryByTestId('metadata-lane-career-break-2024')).not.toBeInTheDocument()
+    })
   })
 
   describe('view mode toggle', () => {

@@ -1,18 +1,37 @@
 import { useState } from 'react'
 import { scaleLinear } from 'd3-scale'
-import type { CareerEntry } from '../data/career'
+import type { CareerEntry, CompanyType, CompanyStage } from '../data/career'
 import { sortEntriesByDate } from '../utils/sortEntriesByDate'
 import { calculateDuration } from '../utils/calculateDuration'
 
 const ORIGIN = '2014-12'
+const MIN_CARD_WIDTH = 130
+const WORK_TYPE_COLOR = '#374151'
+const TECH_COLOR = '#9ca3af'
 
 const PALETTE = [
-  '#3b82f6', // blue
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6', // violet
+  '#3b82f6',
+  '#10b981',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
 ]
+
+const COMPANY_TYPE_COLORS: Record<CompanyType, string> = {
+  enterprise: '#6366f1',
+  startup:    '#10b981',
+  gaming:     '#f59e0b',
+  consulting: '#8b5cf6',
+  agency:     '#ec4899',
+}
+
+const COMPANY_STAGE_COLORS: Record<CompanyStage, string> = {
+  'pre-product':   '#fcd34d',
+  'early-startup': '#86efac',
+  'growth':        '#34d399',
+  'scale-up':      '#06b6d4',
+  'enterprise':    '#6366f1',
+}
 
 type ViewMode = 'proportional' | 'equal'
 
@@ -25,13 +44,31 @@ function monthOffset(date: string): number {
   return calculateDuration(ORIGIN, date)
 }
 
+function chip(color: string, outline = false): React.CSSProperties {
+  return {
+    fontSize: 9,
+    padding: '1px 7px',
+    borderRadius: 10,
+    background: outline ? 'transparent' : color,
+    border: `1px solid ${color}`,
+    color: outline ? color : 'white',
+    letterSpacing: '0.05em',
+    fontWeight: 600,
+    whiteSpace: 'nowrap' as const,
+    display: 'inline-block',
+  }
+}
+
+function chipRow(marginBottom?: number): React.CSSProperties {
+  return { display: 'flex', gap: 4, flexWrap: 'wrap', ...(marginBottom ? { marginBottom } : {}) }
+}
+
 interface Props {
   entries: CareerEntry[]
   width: number
 }
 
 export function CareerTimeline({ entries, width }: Props) {
-  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('proportional')
 
   const totalMonths = monthOffset(presentDate())
@@ -80,10 +117,6 @@ export function CareerTimeline({ entries, width }: Props) {
   const yearTicks: number[] = []
   for (let y = 2015; y <= new Date().getFullYear() + 1; y++) yearTicks.push(y)
 
-  function toggleExpand(id: string) {
-    setExpandedId(prev => (prev === id ? null : id))
-  }
-
   const toggleStyle = (active: boolean, color = '#111827'): React.CSSProperties => ({
     fontSize: 10,
     fontWeight: 700,
@@ -98,7 +131,6 @@ export function CareerTimeline({ entries, width }: Props) {
 
   return (
     <div style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", width }}>
-      {/* View toggle */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4, marginBottom: 12 }}>
         <button
           data-testid="toggle-proportional"
@@ -118,7 +150,6 @@ export function CareerTimeline({ entries, width }: Props) {
         </button>
       </div>
 
-      {/* Time axis — only meaningful in proportional mode */}
       {viewMode === 'proportional' && (
         <svg width={width} height={24} style={{ display: 'block', marginBottom: 8 }}>
           {yearTicks.map(year => {
@@ -135,7 +166,6 @@ export function CareerTimeline({ entries, width }: Props) {
         </svg>
       )}
 
-      {/* Equal mode: slot dividers */}
       {viewMode === 'equal' && (
         <svg width={width} height={24} style={{ display: 'block', marginBottom: 8 }}>
           {orderedEntries.map((_, i) => (
@@ -144,7 +174,6 @@ export function CareerTimeline({ entries, width }: Props) {
         </svg>
       )}
 
-      {/* Company rows */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {orderedEntries.map((entry, i) => {
           if (entry.isBreak) {
@@ -159,11 +188,11 @@ export function CareerTimeline({ entries, width }: Props) {
                 <svg width={width} height={72} style={{ position: 'absolute', top: 0, left: 0 }}>
                   <defs>
                     <clipPath id={`clip-break-${entry.id}`}>
-                      <rect x={bx + 4} y={30} width={Math.max(bw - 8, 0)} height={36} />
+                      <rect x={bx + 4} y={36} width={Math.max(bw - 8, 0)} height={36} />
                     </clipPath>
                   </defs>
-                  <rect data-testid="break-bar" x={bx} y={30} width={bw} height={36} fill="#e5e7eb" rx={2} />
-                  <text x={bx + 8} y={52} fontSize={9} fill="#9ca3af" letterSpacing={0.5} clipPath={`url(#clip-break-${entry.id})`}>
+                  <rect data-testid="break-bar" x={bx} y={36} width={bw} height={36} fill="#e5e7eb" rx={2} />
+                  <text x={bx + 8} y={58} fontSize={9} fill="#9ca3af" letterSpacing={0.5} clipPath={`url(#clip-break-${entry.id})`}>
                     {entry.breakReason?.toUpperCase()}
                   </text>
                 </svg>
@@ -172,42 +201,50 @@ export function CareerTimeline({ entries, width }: Props) {
           }
 
           const color = PALETTE[i % PALETTE.length]
-          const isExpanded = expandedId === entry.id
-          const allMetrics = entry.roles.flatMap(r => r.impactMetrics ?? [])
           const entryStart = entry.roles[0].startDate
           const entryEnd = entry.roles[entry.roles.length - 1].endDate
           const { barStart, barWidth } = getBarGeometry(entry, i)
+          const cardWidth = Math.max(barWidth, MIN_CARD_WIDTH)
+
+          const allWorkTypes = [...new Set(entry.roles.flatMap(r => r.workType ?? []))]
+          const allTech = [
+            ...entry.techStack.languages,
+            ...entry.techStack.frameworks,
+            ...entry.techStack.tools,
+            ...entry.techStack.cloud,
+          ].filter(Boolean)
 
           return (
             <div key={entry.id}>
               <div
                 data-testid={`company-row-${entry.id}`}
-                onClick={() => toggleExpand(entry.id)}
-                style={{ position: 'relative', height: 72, cursor: 'pointer' }}
+                style={{ position: 'relative', height: 72 }}
               >
                 <svg width={width} height={72} style={{ position: 'absolute', top: 0, left: 0 }}>
                   <defs>
                     {entry.roles.map(role => {
                       const { x, w } = getRoleGeometry(role, barStart, barWidth, entryStart, entryEnd)
+                      const adjustedW = viewMode === 'proportional' ? Math.max(w, MIN_CARD_WIDTH) : w
                       return (
                         <clipPath key={role.startDate} id={`clip-${entry.id}-${role.startDate}`}>
-                          <rect x={x + 4} y={30} width={Math.max(w - 8, 0)} height={36} />
+                          <rect x={x + 4} y={36} width={Math.max(adjustedW - 8, 0)} height={36} />
                         </clipPath>
                       )
                     })}
                   </defs>
                   {entry.roles.map(role => {
                     const { x, w } = getRoleGeometry(role, barStart, barWidth, entryStart, entryEnd)
+                    const adjustedW = viewMode === 'proportional' ? Math.max(w, MIN_CARD_WIDTH) : w
                     return (
                       <g key={role.startDate}>
                         <rect
                           data-testid="role-segment"
-                          x={x} y={30} width={w} height={36}
+                          x={x} y={36} width={adjustedW} height={36}
                           fill={color} rx={2} opacity={0.9}
                         />
                         {w > 24 && (
                           <text
-                            x={x + 8} y={52} fontSize={10} fill="white" opacity={0.9}
+                            x={x + 8} y={58} fontSize={10} fill="white" opacity={0.9}
                             clipPath={`url(#clip-${entry.id}-${role.startDate})`}
                           >
                             {role.title}
@@ -223,8 +260,7 @@ export function CareerTimeline({ entries, width }: Props) {
                     position: 'absolute',
                     left: barStart,
                     top: 2,
-                    width: barWidth,
-                    height: 26,
+                    width: cardWidth,
                     border: `1px solid ${color}`,
                     padding: '1px 6px',
                     boxSizing: 'border-box',
@@ -248,40 +284,49 @@ export function CareerTimeline({ entries, width }: Props) {
                   >
                     {entry.company.toUpperCase()}
                   </span>
-                  {viewMode === 'equal' && (
-                    <span style={{ fontSize: 9, color: '#9ca3af', display: 'block', letterSpacing: '0.04em' }}>
-                      {entryStart.split('-')[0]} — {entryEnd === 'present' ? 'NOW' : entryEnd.split('-')[0]}
-                    </span>
-                  )}
+                  <span style={{ fontSize: 9, color: TECH_COLOR, display: 'block', letterSpacing: '0.04em' }}>
+                    {entryStart.split('-')[0]} — {entryEnd === 'present' ? 'NOW' : entryEnd.split('-')[0]}
+                  </span>
                 </div>
               </div>
 
-              {isExpanded && (
-                <div
-                  data-testid={`expanded-${entry.id}`}
-                  style={{
-                    marginLeft: barStart,
-                    marginBottom: 8,
-                    padding: '12px 16px',
-                    borderLeft: `2px solid ${color}`,
-                    background: '#f9fafb',
-                  }}
-                >
-                  <p style={{ fontSize: 12, color: '#374151', marginBottom: allMetrics.length ? 10 : 0, lineHeight: 1.6 }}>
-                    {entry.roles[entry.roles.length - 1].description}
-                  </p>
-                  {allMetrics.length > 0 && (
-                    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                      {allMetrics.map((m, idx) => (
-                        <div key={idx}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: color }}>{m.value}</div>
-                          <div style={{ fontSize: 10, color: '#6b7280', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{m.label}</div>
-                        </div>
-                      ))}
-                    </div>
+              <div
+                data-testid={`metadata-lane-${entry.id}`}
+                style={{
+                  marginLeft: barStart,
+                  width: cardWidth,
+                  borderLeft: `1px solid ${color}`,
+                  borderRight: `1px solid ${color}`,
+                  borderBottom: `1px solid ${color}`,
+                  padding: '6px 8px 8px',
+                  boxSizing: 'border-box',
+                  background: '#fafafa',
+                  marginBottom: 8,
+                }}
+              >
+                <div style={chipRow(5)}>
+                  <span style={chip(COMPANY_TYPE_COLORS[entry.companyType])}>{entry.companyType}</span>
+                  {entry.companyStage !== entry.companyType && (
+                    <span style={chip(COMPANY_STAGE_COLORS[entry.companyStage])}>{entry.companyStage}</span>
                   )}
                 </div>
-              )}
+
+                {allWorkTypes.length > 0 && (
+                  <div style={chipRow(5)}>
+                    {allWorkTypes.map(wt => (
+                      <span key={wt} style={chip(WORK_TYPE_COLOR, true)}>{wt}</span>
+                    ))}
+                  </div>
+                )}
+
+                {allTech.length > 0 && (
+                  <div style={chipRow()}>
+                    {allTech.map(t => (
+                      <span key={t} style={chip(TECH_COLOR, true)}>{t}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )
         })}
