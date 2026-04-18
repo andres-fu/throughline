@@ -35,11 +35,11 @@ export function EntryDrawer({ entry, onSave, onClose }: Props) {
     <div style={{
       position: 'fixed',
       top: 0,
-      right: 0,
+      left: 0,
       bottom: 0,
       width: 420,
       background: 'white',
-      boxShadow: '-4px 0 24px rgba(0,0,0,0.10)',
+      boxShadow: '4px 0 24px rgba(0,0,0,0.10)',
       display: 'flex',
       flexDirection: 'column',
       zIndex: 100,
