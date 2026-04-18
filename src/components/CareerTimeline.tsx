@@ -262,7 +262,17 @@ export function CareerTimeline({ entries, width }: Props) {
           ].filter(Boolean)
 
           return (
-            <div key={entry.id}>
+            <div key={entry.id} style={{ position: 'relative' }}>
+              <div style={{
+                position: 'absolute',
+                left: barStart,
+                top: 0,
+                bottom: 0,
+                width: 4,
+                background: color,
+                borderRadius: '4px 0 0 4px',
+                pointerEvents: 'none',
+              }} />
               <div
                 data-testid={`company-row-${entry.id}`}
                 style={{ position: 'relative', height: 72 }}
@@ -287,7 +297,7 @@ export function CareerTimeline({ entries, width }: Props) {
                         <rect
                           data-testid="role-segment"
                           x={x} y={36} width={adjustedW} height={36}
-                          fill={color} rx={2} opacity={0.9}
+                          fill={color} rx={2}
                         />
                         {w > 24 && (
                           <text
@@ -305,10 +315,9 @@ export function CareerTimeline({ entries, width }: Props) {
                   data-testid="company-row"
                   style={{
                     position: 'absolute',
-                    left: barStart,
-                    top: 2,
-                    width: cardWidth,
-                    border: `1px solid ${color}`,
+                    left: barStart + 4,
+                    top: 0,
+                    width: cardWidth - 4,
                     padding: '1px 6px',
                     boxSizing: 'border-box',
                     overflow: 'hidden',
@@ -340,14 +349,11 @@ export function CareerTimeline({ entries, width }: Props) {
               <div
                 data-testid={`metadata-lane-${entry.id}`}
                 style={{
-                  marginLeft: barStart,
-                  width: cardWidth,
-                  borderLeft: `1px solid ${color}`,
-                  borderRight: `1px solid ${color}`,
-                  borderBottom: `1px solid ${color}`,
+                  marginLeft: barStart + 4,
+                  width: cardWidth - 4,
                   padding: '6px 8px 8px',
                   boxSizing: 'border-box',
-                  background: '#fafafa',
+                  background: '#f9fafb',
                 }}
               >
                 <div style={chipRow(5)}>
