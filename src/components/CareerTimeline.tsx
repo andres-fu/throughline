@@ -76,9 +76,10 @@ const laneLabel: React.CSSProperties = {
 interface Props {
   entries: CareerEntry[]
   width: number
+  onEntryClick?: (id: string) => void
 }
 
-export function CareerTimeline({ entries, width }: Props) {
+export function CareerTimeline({ entries, width, onEntryClick }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('proportional')
 
   const totalMonths = monthOffset(presentDate())
@@ -300,7 +301,8 @@ export function CareerTimeline({ entries, width }: Props) {
               }} />
               <div
                 data-testid={`company-row-${entry.id}`}
-                style={{ position: 'relative', height: 72 }}
+                style={{ position: 'relative', height: 72, cursor: onEntryClick ? 'pointer' : 'default' }}
+                onClick={() => onEntryClick?.(entry.id)}
               >
                 <svg width={width} height={72} style={{ position: 'absolute', top: 0, left: 0 }}>
                   <defs>

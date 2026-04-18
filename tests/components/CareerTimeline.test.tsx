@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CareerTimeline } from '../../src/components/CareerTimeline'
@@ -50,6 +50,13 @@ describe('CareerTimeline', () => {
     render(<CareerTimeline entries={career} width={1100} />)
     await userEvent.click(screen.getByTestId('company-row-blackbaud'))
     expect(screen.queryByTestId('expanded-blackbaud')).not.toBeInTheDocument()
+  })
+
+  it('calls onEntryClick with the entry id when a company row is clicked', async () => {
+    const onEntryClick = vi.fn()
+    render(<CareerTimeline entries={career} width={1100} onEntryClick={onEntryClick} />)
+    await userEvent.click(screen.getByTestId('company-row-blackbaud'))
+    expect(onEntryClick).toHaveBeenCalledWith('blackbaud')
   })
 
   describe('team composition chips', () => {
