@@ -3,6 +3,7 @@ import { scaleLinear } from 'd3-scale'
 import type { CareerEntry, CompanyType, CompanyStage } from '../data/career'
 import { sortEntriesByDate } from '../utils/sortEntriesByDate'
 import { calculateDuration } from '../utils/calculateDuration'
+import { formatDuration } from '../utils/formatDuration'
 
 const ORIGIN = '2014-12'
 const MIN_CARD_WIDTH = 130
@@ -191,6 +192,21 @@ export function CareerTimeline({ entries, width }: Props) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative' }}>
         {viewMode === 'proportional' && (
+          <svg
+            data-testid="year-grid"
+            width={width}
+            height="100%"
+            style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+          >
+            {yearTicks
+              .filter(year => width + 16 - xScale(monthOffset(`${year}-01`)) > 50)
+              .map(year => {
+                const x = xScale(monthOffset(`${year}-01`))
+                return <line key={year} x1={x} y1={0} x2={x} y2="100%" stroke="#e5e7eb" strokeWidth={1} />
+              })}
+          </svg>
+        )}
+        {viewMode === 'proportional' && (
           <div
             data-testid="now-marker"
             style={{
@@ -351,6 +367,7 @@ export function CareerTimeline({ entries, width }: Props) {
                   </span>
                   <span style={{ fontSize: 9, color: TECH_COLOR, display: 'block', letterSpacing: '0.04em' }}>
                     {entryStart.split('-')[0]} — {entryEnd === 'present' ? 'NOW' : entryEnd.split('-')[0]}
+                    {' · '}{formatDuration(calculateDuration(entryStart, entryEnd === 'present' ? presentDate() : entryEnd))}
                   </span>
                 </div>
               </div>
