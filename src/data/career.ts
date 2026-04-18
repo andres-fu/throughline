@@ -31,9 +31,19 @@ export interface ImpactMetric {
   label: string
 }
 
+export interface TeamBreakdown {
+  engineers?: number
+  architects?: number
+  managers?: number
+  designers?: number
+  qa?: number
+  data?: number
+  other?: number
+}
+
 export interface TeamComposition {
   directReports?: number
-  totalTeamSize?: number
+  breakdown?: TeamBreakdown
   notes?: string
 }
 
@@ -137,7 +147,7 @@ export const career: CareerEntry[] = [
         workType: ['modernization', 'devops', 'data'],
         architecturePatterns: ['event-driven', 'cloud-native'],
         teamComposition: {
-          totalTeamSize: 10,
+          breakdown: { engineers: 8, managers: 2 },
         },
         impactMetrics: [
           { value: '20%', label: 'increase in team velocity' },
@@ -178,7 +188,7 @@ export const career: CareerEntry[] = [
         workType: ['platform'],
         architecturePatterns: ['microservices', 'event-driven'],
         teamComposition: {
-          totalTeamSize: 8,
+          breakdown: { engineers: 6, managers: 2 },
         },
         impactMetrics: [
           { value: '10%', label: 'reduction in project delays' },
@@ -224,7 +234,7 @@ export const career: CareerEntry[] = [
         architecturePatterns: [],
         teamComposition: {
           directReports: 4,
-          notes: '3 architects, 1 manager, 3 scrum teams',
+          breakdown: { architects: 3, managers: 1 },
         },
         impactMetrics: [
           { value: '62.5%', label: 'faster recruiting (4 weeks → 1.5 weeks)' },
@@ -274,8 +284,7 @@ export const career: CareerEntry[] = [
         workType: ['modernization', 'platform', 'devops'],
         architecturePatterns: ['event-driven', 'cloud-native'],
         teamComposition: {
-          totalTeamSize: 12,
-          notes: '2 teams averaging 6 engineers each',
+          breakdown: { engineers: 12, managers: 2 },
         },
         projects: [
           {

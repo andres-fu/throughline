@@ -237,6 +237,23 @@ export function CareerTimeline({ entries, width }: Props) {
           const cardWidth = Math.max(barWidth, MIN_CARD_WIDTH)
 
           const allWorkTypes = [...new Set(entry.roles.flatMap(r => r.workType ?? []))]
+          const teamChips: string[] = entry.roles.flatMap(r => {
+            const tc = r.teamComposition
+            if (!tc) return []
+            const chips: string[] = []
+            if (tc.directReports != null && tc.directReports > 0) chips.push(`${tc.directReports} direct reports`)
+            if (tc.breakdown) {
+              const { engineers, architects, managers, designers, qa, data, other } = tc.breakdown
+              if (engineers)  chips.push(`${engineers} engineers`)
+              if (architects) chips.push(`${architects} architects`)
+              if (managers)   chips.push(`${managers} managers`)
+              if (designers)  chips.push(`${designers} designers`)
+              if (qa)         chips.push(`${qa} qa`)
+              if (data)       chips.push(`${data} data`)
+              if (other)      chips.push(`${other} other`)
+            }
+            return chips
+          })
           const allTech = [
             ...entry.techStack.languages,
             ...entry.techStack.frameworks,
@@ -344,6 +361,14 @@ export function CareerTimeline({ entries, width }: Props) {
                   <div style={chipRow(5)}>
                     {allWorkTypes.map(wt => (
                       <span key={wt} style={chip(WORK_TYPE_COLOR, true)}>{wt}</span>
+                    ))}
+                  </div>
+                )}
+
+                {teamChips.length > 0 && (
+                  <div style={chipRow(5)}>
+                    {teamChips.map(t => (
+                      <span key={t} style={chip('#6b7280', true)}>{t}</span>
                     ))}
                   </div>
                 )}

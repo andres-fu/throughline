@@ -52,6 +52,26 @@ describe('CareerTimeline', () => {
     expect(screen.queryByTestId('expanded-blackbaud')).not.toBeInTheDocument()
   })
 
+  describe('team composition chips', () => {
+    it('renders direct reports chip when present', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      const lane = screen.getByTestId('metadata-lane-dealerware')
+      expect(lane).toHaveTextContent('4 direct reports')
+    })
+
+    it('renders breakdown chips when present', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      const lane = screen.getByTestId('metadata-lane-blackbaud')
+      expect(lane).toHaveTextContent('engineers')
+    })
+
+    it('does not render team chips when no composition data', () => {
+      render(<CareerTimeline entries={career} width={1100} />)
+      const lane = screen.getByTestId('metadata-lane-ai-grants')
+      expect(lane).not.toHaveTextContent('direct reports')
+    })
+  })
+
   describe('metadata lanes', () => {
     it('renders a metadata lane for each non-break entry', () => {
       render(<CareerTimeline entries={career} width={1100} />)
