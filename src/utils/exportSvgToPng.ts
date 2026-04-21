@@ -1,12 +1,11 @@
 export interface ExportPreset {
   label: string
   width: number
-  height: number
 }
 
 export const EXPORT_PRESETS: ExportPreset[] = [
-  { label: 'LinkedIn Featured (1584×396)', width: 1584, height: 396 },
-  { label: 'LinkedIn Post (1200×627)',      width: 1200, height: 627 },
+  { label: 'LinkedIn Featured (1584px)', width: 1584 },
+  { label: 'LinkedIn Post (1200px)',      width: 1200 },
 ]
 
 export function exportSvgToPng(
@@ -15,12 +14,9 @@ export function exportSvgToPng(
   filename = 'throughline.png',
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const svgW = svgEl.viewBox.baseVal.width  || svgEl.clientWidth
-    const svgH = svgEl.viewBox.baseVal.height || svgEl.clientHeight
-
-    const scaleX = preset.width  / svgW
-    const scaleY = preset.height / svgH
-    const scale  = Math.min(scaleX, scaleY)
+    const svgW  = svgEl.viewBox.baseVal.width  || svgEl.clientWidth
+    const svgH  = svgEl.viewBox.baseVal.height || svgEl.clientHeight
+    const scale = preset.width / svgW
 
     const serializer = new XMLSerializer()
     const svgStr = serializer.serializeToString(svgEl)
@@ -31,11 +27,11 @@ export function exportSvgToPng(
     img.onload = () => {
       const canvas  = document.createElement('canvas')
       canvas.width  = preset.width
-      canvas.height = preset.height
+      canvas.height = Math.ceil(svgH * scale)
 
       const ctx = canvas.getContext('2d')!
       ctx.fillStyle = '#ffffff'
-      ctx.fillRect(0, 0, preset.width, preset.height)
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
       ctx.drawImage(img, 0, 0, svgW * scale, svgH * scale)
 
       URL.revokeObjectURL(url)

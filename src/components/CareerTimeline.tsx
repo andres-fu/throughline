@@ -7,7 +7,6 @@ import { formatDuration } from '../utils/formatDuration'
 import { layoutChips, estimateChipWidth } from '../utils/layoutChips'
 
 // ── Geometry constants ──────────────────────────────────────────────────────
-const ORIGIN        = '2014-12'
 const MIN_CARD_W    = 130
 const ACCENT_W      = 4
 const AXIS_H        = 32
@@ -51,10 +50,6 @@ type ViewMode = 'proportional' | 'equal'
 function presentDate(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
-
-function monthOffset(date: string): number {
-  return calculateDuration(ORIGIN, date)
 }
 
 // ── SVG chip ─────────────────────────────────────────────────────────────────
@@ -112,6 +107,19 @@ export function CareerTimeline({ entries, width, onEntryClick, svgRef: externalR
   const [viewMode, setViewMode] = useState<ViewMode>('proportional')
   const internalRef = useRef<SVGSVGElement>(null)
   const svgRef = externalRef ?? internalRef
+
+  // ── Dynamic origin from earliest entry date ────────────────────────────────
+  const allDates = entries.flatMap(e =>
+    e.isBreak ? [e.breakStartDate ?? ''] : e.roles.map(r => r.startDate)
+  ).filter(Boolean)
+  const minYear = allDates.length > 0
+    ? Math.min(...allDates.map(d => parseInt(d.split('-')[0])))
+    : new Date().getFullYear() - 10
+  const origin = `${minYear}-01`
+
+  function monthOffset(date: string): number {
+    return calculateDuration(origin, date)
+  }
 
   const totalMonths = monthOffset(presentDate())
   const xScale      = scaleLinear().domain([0, totalMonths]).range([0, width])
@@ -184,7 +192,7 @@ export function CareerTimeline({ entries, width, onEntryClick, svgRef: externalR
   const svgW      = width + 32
 
   const yearTicks: number[] = []
-  for (let y = 2015; y <= new Date().getFullYear() + 1; y++) yearTicks.push(y)
+  for (let y = minYear; y <= new Date().getFullYear() + 1; y++) yearTicks.push(y)
   const visibleYearTicks = yearTicks.filter(y => width + 16 - xScale(monthOffset(`${y}-01`)) > 50)
 
   // ── Toggle style ─────────────────────────────────────────────────────────
