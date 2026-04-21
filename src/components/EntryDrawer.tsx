@@ -8,6 +8,7 @@ interface Props {
   entry: CareerEntry
   onSave: (updated: CareerEntry) => void
   onClose: () => void
+  onDelete?: (id: string) => void
 }
 
 const sectionLabel: React.CSSProperties = {
@@ -19,7 +20,7 @@ const sectionLabel: React.CSSProperties = {
   marginTop: 4,
 }
 
-export function EntryDrawer({ entry, onSave, onClose }: Props) {
+export function EntryDrawer({ entry, onSave, onClose, onDelete }: Props) {
   const [draft, setDraft] = useState<CareerEntry>(entry)
 
   const hasUnsavedChanges = JSON.stringify(draft) !== JSON.stringify(entry)
@@ -82,7 +83,7 @@ export function EntryDrawer({ entry, onSave, onClose }: Props) {
         </div>
       </div>
 
-      <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb', flexShrink: 0 }}>
+      <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <button
           data-testid="drawer-save"
           onClick={handleSave}
@@ -90,6 +91,20 @@ export function EntryDrawer({ entry, onSave, onClose }: Props) {
         >
           SAVE
         </button>
+        {onDelete && (
+          <button
+            data-testid="drawer-delete"
+            onClick={() => {
+              if (window.confirm('Delete this entry? This cannot be undone.')) {
+                onDelete(entry.id)
+                onClose()
+              }
+            }}
+            style={{ width: '100%', padding: '6px 0', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', background: 'none', color: '#ef4444', border: '1px solid #fecaca', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            DELETE ENTRY
+          </button>
+        )}
       </div>
     </div>
   )

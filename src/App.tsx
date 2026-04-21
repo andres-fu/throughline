@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { CareerEntry } from './data/career'
 import { usePersistedEntries } from './hooks/usePersistedEntries'
+import { createBlankEntry } from './utils/createBlankEntry'
 import { CareerTimeline } from './components/CareerTimeline'
 import { EntryDrawer } from './components/EntryDrawer'
 
@@ -17,6 +18,17 @@ export default function App() {
 
   function handleSave(updated: CareerEntry) {
     setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
+  }
+
+  function handleAdd() {
+    const blank = createBlankEntry()
+    setEntries(prev => [...prev, blank])
+    setSelectedId(blank.id)
+  }
+
+  function handleDelete(id: string) {
+    setEntries(prev => prev.filter(e => e.id !== id))
+    setSelectedId(null)
   }
 
   return (
@@ -39,6 +51,7 @@ export default function App() {
             entry={selectedEntry}
             onSave={handleSave}
             onClose={() => setSelectedId(null)}
+            onDelete={handleDelete}
           />
         ) : (
           <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -46,6 +59,12 @@ export default function App() {
               <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', color: '#111827' }}>THROUGHLINE</span>
               <span style={{ fontSize: 11, color: '#9ca3af', letterSpacing: '0.04em' }}>Select an entry to edit</span>
             </div>
+            <button
+              onClick={handleAdd}
+              style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', padding: '6px 10px', border: '1px solid #111827', borderRadius: 4, background: '#111827', cursor: 'pointer', color: 'white', fontFamily: 'inherit', textAlign: 'left' }}
+            >
+              + NEW ENTRY
+            </button>
             <button
               onClick={() => {
                 if (window.confirm('Reset all entries to defaults? This cannot be undone.')) {

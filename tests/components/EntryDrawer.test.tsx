@@ -65,4 +65,34 @@ describe('EntryDrawer', () => {
     fireEvent.change(screen.getByTestId('company-name-input'), { target: { value: 'Changed' } })
     expect(screen.getByTestId('unsaved-indicator')).toBeInTheDocument()
   })
+
+  describe('delete', () => {
+    it('renders delete button when onDelete is provided', () => {
+      render(<EntryDrawer entry={entry} onSave={() => {}} onClose={() => {}} onDelete={() => {}} />)
+      expect(screen.getByTestId('drawer-delete')).toBeInTheDocument()
+    })
+
+    it('does not render delete button when onDelete is not provided', () => {
+      render(<EntryDrawer entry={entry} onSave={() => {}} onClose={() => {}} />)
+      expect(screen.queryByTestId('drawer-delete')).not.toBeInTheDocument()
+    })
+
+    it('calls onDelete with entry id and onClose when confirmed', () => {
+      const onDelete = vi.fn()
+      const onClose = vi.fn()
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
+      render(<EntryDrawer entry={entry} onSave={() => {}} onClose={onClose} onDelete={onDelete} />)
+      fireEvent.click(screen.getByTestId('drawer-delete'))
+      expect(onDelete).toHaveBeenCalledWith(entry.id)
+      expect(onClose).toHaveBeenCalled()
+    })
+
+    it('does not call onDelete when confirm is cancelled', () => {
+      const onDelete = vi.fn()
+      vi.spyOn(window, 'confirm').mockReturnValue(false)
+      render(<EntryDrawer entry={entry} onSave={() => {}} onClose={() => {}} onDelete={onDelete} />)
+      fireEvent.click(screen.getByTestId('drawer-delete'))
+      expect(onDelete).not.toHaveBeenCalled()
+    })
+  })
 })
