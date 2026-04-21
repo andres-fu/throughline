@@ -54,4 +54,65 @@ describe('RolesSection', () => {
     expect(updatedRoles).toHaveLength(1)
     expect(updatedRoles[0].title).toBe('Sr. Software Engineering Manager')
   })
+
+  describe('team details', () => {
+    it('renders a team toggle button for each role', () => {
+      render(<RolesSection draft={shippo} onChange={() => {}} />)
+      expect(screen.getByTestId('team-toggle-0')).toBeInTheDocument()
+    })
+
+    it('team fields are hidden by default', () => {
+      render(<RolesSection draft={shippo} onChange={() => {}} />)
+      expect(screen.queryByTestId('team-direct-reports-0')).not.toBeInTheDocument()
+    })
+
+    it('clicking toggle reveals team fields', () => {
+      render(<RolesSection draft={shippo} onChange={() => {}} />)
+      fireEvent.click(screen.getByTestId('team-toggle-0'))
+      expect(screen.getByTestId('team-direct-reports-0')).toBeInTheDocument()
+      expect(screen.getByTestId('team-notes-0')).toBeInTheDocument()
+      expect(screen.getByTestId('team-breakdown-engineers-0')).toBeInTheDocument()
+    })
+
+    it('clicking toggle again hides team fields', () => {
+      render(<RolesSection draft={shippo} onChange={() => {}} />)
+      fireEvent.click(screen.getByTestId('team-toggle-0'))
+      fireEvent.click(screen.getByTestId('team-toggle-0'))
+      expect(screen.queryByTestId('team-direct-reports-0')).not.toBeInTheDocument()
+    })
+
+    it('shows existing teamComposition values when expanded', () => {
+      render(<RolesSection draft={shippo} onChange={() => {}} />)
+      fireEvent.click(screen.getByTestId('team-toggle-0'))
+      expect((screen.getByTestId('team-breakdown-engineers-0') as HTMLInputElement).value).toBe('6')
+      expect((screen.getByTestId('team-breakdown-managers-0') as HTMLInputElement).value).toBe('2')
+    })
+
+    it('calls onChange with updated directReports when changed', () => {
+      const onChange = vi.fn()
+      render(<RolesSection draft={shippo} onChange={onChange} />)
+      fireEvent.click(screen.getByTestId('team-toggle-0'))
+      fireEvent.change(screen.getByTestId('team-direct-reports-0'), { target: { value: '5' } })
+      const updatedRole = onChange.mock.calls[0][0].roles[0]
+      expect(updatedRole.teamComposition?.directReports).toBe(5)
+    })
+
+    it('calls onChange with updated breakdown field when changed', () => {
+      const onChange = vi.fn()
+      render(<RolesSection draft={shippo} onChange={onChange} />)
+      fireEvent.click(screen.getByTestId('team-toggle-0'))
+      fireEvent.change(screen.getByTestId('team-breakdown-engineers-0'), { target: { value: '8' } })
+      const updatedRole = onChange.mock.calls[0][0].roles[0]
+      expect(updatedRole.teamComposition?.breakdown?.engineers).toBe(8)
+    })
+
+    it('calls onChange with updated notes when changed', () => {
+      const onChange = vi.fn()
+      render(<RolesSection draft={shippo} onChange={onChange} />)
+      fireEvent.click(screen.getByTestId('team-toggle-0'))
+      fireEvent.change(screen.getByTestId('team-notes-0'), { target: { value: 'Cross-functional team' } })
+      const updatedRole = onChange.mock.calls[0][0].roles[0]
+      expect(updatedRole.teamComposition?.notes).toBe('Cross-functional team')
+    })
+  })
 })
