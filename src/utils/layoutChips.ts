@@ -6,7 +6,7 @@ export interface ChipPos {
 }
 
 export function estimateChipWidth(label: string): number {
-  return Math.ceil(label.length * 5.4 + 14)
+  return Math.ceil(label.length * 6.5 + 16)
 }
 
 export function layoutChips(

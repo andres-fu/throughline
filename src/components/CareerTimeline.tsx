@@ -22,7 +22,7 @@ const LABEL_COL_W   = 38
 const CHIP_H        = 16
 const CHIP_H_GAP    = 4
 const CHIP_V_GAP    = 4
-const ROW_SPACING   = 5
+const ROW_SPACING   = 8
 
 // ── Colours ─────────────────────────────────────────────────────────────────
 const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
@@ -360,8 +360,12 @@ export function CareerTimeline({ entries, width, onEntryClick, svgRef: externalR
               })}
 
               {/* Metadata lane */}
+              <clipPath id={`clip-meta-${entry.id}`}>
+                <rect x={barStart + ACCENT_W} y={ENTRY_BAR_H} width={metaW} height={metaH} />
+              </clipPath>
               <g data-testid={`metadata-lane-${entry.id}`}
-                transform={`translate(${barStart + ACCENT_W}, ${ENTRY_BAR_H})`}>
+                transform={`translate(${barStart + ACCENT_W}, ${ENTRY_BAR_H})`}
+                clipPath={`url(#clip-meta-${entry.id})`}>
                 <rect x={0} y={0} width={metaW} height={metaH} fill="#f9fafb" />
                 {laidRows.map(row => (
                   <g key={row.sectionLabel} transform={`translate(${META_PAD_X}, ${row.rowY})`}>
