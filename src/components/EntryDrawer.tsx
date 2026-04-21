@@ -67,7 +67,7 @@ export function EntryDrawer({ entry, onSave, onClose }: Props) {
         </button>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div key={entry.id} style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 24, animation: 'drawerEnter 0.35s ease-out' }}>
         <div>
           <div style={sectionLabel}>COMPANY INFO</div>
           <CompanyInfoSection draft={draft} onChange={handleChange} />

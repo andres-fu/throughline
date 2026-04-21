@@ -4,14 +4,16 @@ import type { CareerEntry } from './data/career'
 import { CareerTimeline } from './components/CareerTimeline'
 import { EntryDrawer } from './components/EntryDrawer'
 
-const SIDEBAR_WIDTH = 360
+const SIDEBAR_COLLAPSED = 220
+const SIDEBAR_EXPANDED = 400
 
 export default function App() {
   const [entries, setEntries] = useState<CareerEntry[]>(career)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const selectedEntry = selectedId ? entries.find(e => e.id === selectedId) ?? null : null
-  const timelineWidth = Math.max(window.innerWidth - SIDEBAR_WIDTH - 64, 800)
+  const sidebarWidth = selectedEntry ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED
+  const timelineWidth = Math.max(window.innerWidth - SIDEBAR_EXPANDED - 64, 800)
 
   function handleSave(updated: CareerEntry) {
     setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
@@ -20,7 +22,7 @@ export default function App() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
       <div style={{
-        width: SIDEBAR_WIDTH,
+        width: sidebarWidth,
         flexShrink: 0,
         borderRight: '1px solid #e5e7eb',
         display: 'flex',
@@ -28,9 +30,12 @@ export default function App() {
         height: '100vh',
         position: 'sticky',
         top: 0,
+        overflow: 'hidden',
+        transition: 'width 0.25s ease',
       }}>
         {selectedEntry ? (
           <EntryDrawer
+            key={selectedId}
             entry={selectedEntry}
             onSave={handleSave}
             onClose={() => setSelectedId(null)}
