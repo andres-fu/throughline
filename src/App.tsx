@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import type { CareerEntry } from './data/career'
 import { usePersistedEntries } from './hooks/usePersistedEntries'
 import { createBlankEntry } from './utils/createBlankEntry'
+import { exportSvgToPng, EXPORT_PRESETS } from './utils/exportSvgToPng'
 import { CareerTimeline } from './components/CareerTimeline'
 import { EntryDrawer } from './components/EntryDrawer'
 
@@ -11,6 +12,8 @@ const SIDEBAR_EXPANDED = 400
 export default function App() {
   const { entries, setEntries, reset } = usePersistedEntries()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [exportPresetIdx, setExportPresetIdx] = useState(0)
+  const timelineSvgRef = useRef<SVGSVGElement>(null)
 
   const selectedEntry = selectedId ? entries.find(e => e.id === selectedId) ?? null : null
   const sidebarWidth = selectedEntry ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED
@@ -65,6 +68,27 @@ export default function App() {
             >
               + NEW ENTRY
             </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <select
+                value={exportPresetIdx}
+                onChange={e => setExportPresetIdx(Number(e.target.value))}
+                style={{ fontSize: 10, padding: '5px 8px', border: '1px solid #e5e7eb', borderRadius: 4, fontFamily: 'inherit', color: '#374151', background: 'white' }}
+              >
+                {EXPORT_PRESETS.map((p, i) => (
+                  <option key={i} value={i}>{p.label}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  if (timelineSvgRef.current) {
+                    exportSvgToPng(timelineSvgRef.current, EXPORT_PRESETS[exportPresetIdx])
+                  }
+                }}
+                style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', padding: '6px 10px', border: '1px solid #6366f1', borderRadius: 4, background: 'none', cursor: 'pointer', color: '#6366f1', fontFamily: 'inherit', textAlign: 'left' }}
+              >
+                EXPORT PNG
+              </button>
+            </div>
             <button
               onClick={() => {
                 if (window.confirm('Reset all entries to defaults? This cannot be undone.')) {
@@ -85,6 +109,7 @@ export default function App() {
           entries={entries}
           width={timelineWidth}
           onEntryClick={id => setSelectedId(prev => prev === id ? null : id)}
+          svgRef={timelineSvgRef}
         />
       </main>
     </div>

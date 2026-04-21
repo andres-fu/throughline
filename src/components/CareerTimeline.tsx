@@ -105,11 +105,13 @@ interface Props {
   entries: CareerEntry[]
   width: number
   onEntryClick?: (id: string) => void
+  svgRef?: React.RefObject<SVGSVGElement>
 }
 
-export function CareerTimeline({ entries, width, onEntryClick }: Props) {
+export function CareerTimeline({ entries, width, onEntryClick, svgRef: externalRef }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('proportional')
-  const svgRef = useRef<SVGSVGElement>(null)
+  const internalRef = useRef<SVGSVGElement>(null)
+  const svgRef = externalRef ?? internalRef
 
   const totalMonths = monthOffset(presentDate())
   const xScale      = scaleLinear().domain([0, totalMonths]).range([0, width])
@@ -208,6 +210,7 @@ export function CareerTimeline({ entries, width, onEntryClick }: Props) {
       </div>
 
       <svg ref={svgRef} width={svgW} height={totalSvgH}
+        viewBox={`0 0 ${svgW} ${totalSvgH}`}
         style={{ display: 'block', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
 
         {/* ── Axis ── */}
