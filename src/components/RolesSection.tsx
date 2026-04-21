@@ -107,16 +107,29 @@ export function RolesSection({ draft, onChange }: Props) {
 
           {expandedTeam.has(i) && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4, borderTop: '1px solid #f3f4f6' }}>
-              <div>
-                <label style={labelStyle}>DIRECT REPORTS</label>
-                <input
-                  data-testid={`team-direct-reports-${i}`}
-                  type="number"
-                  min={0}
-                  style={numInputStyle}
-                  value={role.teamComposition?.directReports ?? ''}
-                  onChange={e => patchTeam(i, { directReports: e.target.value === '' ? undefined : Number(e.target.value) })}
-                />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>DIRECT REPORTS</label>
+                  <input
+                    data-testid={`team-direct-reports-${i}`}
+                    type="number"
+                    min={0}
+                    style={numInputStyle}
+                    value={role.teamComposition?.directReports ?? ''}
+                    onChange={e => patchTeam(i, { directReports: e.target.value === '' ? undefined : Number(e.target.value) })}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>ORG SIZE</label>
+                  <input
+                    data-testid={`team-org-size-${i}`}
+                    type="number"
+                    min={0}
+                    style={numInputStyle}
+                    value={role.teamComposition?.orgSize ?? ''}
+                    onChange={e => patchTeam(i, { orgSize: e.target.value === '' ? undefined : Number(e.target.value) })}
+                  />
+                </div>
               </div>
               <div>
                 <label style={labelStyle}>BREAKDOWN</label>

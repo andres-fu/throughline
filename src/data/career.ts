@@ -43,6 +43,7 @@ export interface TeamBreakdown {
 
 export interface TeamComposition {
   directReports?: number
+  orgSize?: number
   breakdown?: TeamBreakdown
   notes?: string
 }

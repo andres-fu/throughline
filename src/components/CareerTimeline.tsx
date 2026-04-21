@@ -398,7 +398,13 @@ function buildTeamChips(entry: CareerEntry): string[] {
     const tc = r.teamComposition
     if (!tc) return []
     const chips: string[] = []
-    if (tc.directReports != null && tc.directReports > 0) chips.push(`${tc.directReports} direct reports`)
+    if (tc.orgSize != null && tc.orgSize > 0 && tc.directReports != null && tc.directReports > 0) {
+      chips.push(`${tc.orgSize} total (${tc.directReports} direct)`)
+    } else if (tc.orgSize != null && tc.orgSize > 0) {
+      chips.push(`${tc.orgSize} total org`)
+    } else if (tc.directReports != null && tc.directReports > 0) {
+      chips.push(`${tc.directReports} direct reports`)
+    }
     if (tc.breakdown) {
       const { engineers, architects, managers, designers, qa, data, other } = tc.breakdown
       if (engineers)  chips.push(`${engineers} engineers`)

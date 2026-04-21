@@ -60,6 +60,29 @@ describe('CareerTimeline', () => {
   })
 
   describe('team composition chips', () => {
+    it('renders combined chip when both orgSize and directReports are set', () => {
+      const entry = career.find(e => e.id === 'dealerware')!
+      const modified = {
+        ...entry,
+        roles: [{ ...entry.roles[0], teamComposition: { directReports: 4, orgSize: 20 } }],
+      }
+      render(<CareerTimeline entries={[modified]} width={1100} />)
+      const lane = screen.getByTestId('metadata-lane-dealerware')
+      expect(lane).toHaveTextContent('20 total (4 direct)')
+    })
+
+    it('renders org size only chip when orgSize is set without directReports', () => {
+      const entry = career.find(e => e.id === 'dealerware')!
+      const modified = {
+        ...entry,
+        roles: [{ ...entry.roles[0], teamComposition: { orgSize: 20 } }],
+      }
+      render(<CareerTimeline entries={[modified]} width={1100} />)
+      const lane = screen.getByTestId('metadata-lane-dealerware')
+      expect(lane).toHaveTextContent('20 total org')
+      expect(lane).not.toHaveTextContent('direct')
+    })
+
     it('renders direct reports chip when present', () => {
       render(<CareerTimeline entries={career} width={1100} />)
       const lane = screen.getByTestId('metadata-lane-dealerware')

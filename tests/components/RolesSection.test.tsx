@@ -114,5 +114,20 @@ describe('RolesSection', () => {
       const updatedRole = onChange.mock.calls[0][0].roles[0]
       expect(updatedRole.teamComposition?.notes).toBe('Cross-functional team')
     })
+
+    it('shows org size input when expanded', () => {
+      render(<RolesSection draft={shippo} onChange={() => {}} />)
+      fireEvent.click(screen.getByTestId('team-toggle-0'))
+      expect(screen.getByTestId('team-org-size-0')).toBeInTheDocument()
+    })
+
+    it('calls onChange with updated orgSize when changed', () => {
+      const onChange = vi.fn()
+      render(<RolesSection draft={shippo} onChange={onChange} />)
+      fireEvent.click(screen.getByTestId('team-toggle-0'))
+      fireEvent.change(screen.getByTestId('team-org-size-0'), { target: { value: '30' } })
+      const updatedRole = onChange.mock.calls[0][0].roles[0]
+      expect(updatedRole.teamComposition?.orgSize).toBe(30)
+    })
   })
 })
