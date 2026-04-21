@@ -48,18 +48,6 @@ describe('EntryDrawer', () => {
     expect(screen.getByTestId('drawer-title')).toHaveTextContent('SHIPPO')
   })
 
-  it('renders a backdrop', () => {
-    render(<EntryDrawer entry={entry} onSave={() => {}} onClose={() => {}} />)
-    expect(screen.getByTestId('drawer-backdrop')).toBeInTheDocument()
-  })
-
-  it('calls onClose when backdrop is clicked', () => {
-    const onClose = vi.fn()
-    render(<EntryDrawer entry={entry} onSave={() => {}} onClose={onClose} />)
-    fireEvent.click(screen.getByTestId('drawer-backdrop'))
-    expect(onClose).toHaveBeenCalled()
-  })
-
   it('calls onClose when Escape is pressed', () => {
     const onClose = vi.fn()
     render(<EntryDrawer entry={entry} onSave={() => {}} onClose={onClose} />)

@@ -26,19 +26,37 @@ describe('TechStackSection', () => {
     expect((screen.getByTestId('tech-cloud-input') as HTMLInputElement).value).toBe('AWS, Azure')
   })
 
-  it('calls onChange with split array when languages input changes', () => {
+  it('does not call onChange while typing (before blur)', () => {
     const onChange = vi.fn()
     render(<TechStackSection draft={blackbaud} onChange={onChange} />)
-    fireEvent.change(screen.getByTestId('tech-languages-input'), { target: { value: 'Java, Python' } })
+    fireEvent.change(screen.getByTestId('tech-languages-input'), { target: { value: 'Java,' } })
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('preserves mid-typing value including trailing comma', () => {
+    render(<TechStackSection draft={blackbaud} onChange={() => {}} />)
+    const input = screen.getByTestId('tech-languages-input') as HTMLInputElement
+    fireEvent.change(input, { target: { value: 'Java,' } })
+    expect(input.value).toBe('Java,')
+  })
+
+  it('calls onChange with split array on blur', () => {
+    const onChange = vi.fn()
+    render(<TechStackSection draft={blackbaud} onChange={onChange} />)
+    const input = screen.getByTestId('tech-languages-input')
+    fireEvent.change(input, { target: { value: 'Java, Python' } })
+    fireEvent.blur(input)
     expect(onChange).toHaveBeenCalledWith({
       techStack: { ...blackbaud.techStack, languages: ['Java', 'Python'] },
     })
   })
 
-  it('calls onChange with split array when cloud input changes', () => {
+  it('calls onChange with split array on cloud blur', () => {
     const onChange = vi.fn()
     render(<TechStackSection draft={blackbaud} onChange={onChange} />)
-    fireEvent.change(screen.getByTestId('tech-cloud-input'), { target: { value: 'AWS, Azure, GCP' } })
+    const input = screen.getByTestId('tech-cloud-input')
+    fireEvent.change(input, { target: { value: 'AWS, Azure, GCP' } })
+    fireEvent.blur(input)
     expect(onChange).toHaveBeenCalledWith({
       techStack: { ...blackbaud.techStack, cloud: ['AWS', 'Azure', 'GCP'] },
     })
