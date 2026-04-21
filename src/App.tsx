@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { career } from './data/career'
 import type { CareerEntry } from './data/career'
+import { usePersistedEntries } from './hooks/usePersistedEntries'
 import { CareerTimeline } from './components/CareerTimeline'
 import { EntryDrawer } from './components/EntryDrawer'
 
@@ -8,7 +8,7 @@ const SIDEBAR_COLLAPSED = 220
 const SIDEBAR_EXPANDED = 400
 
 export default function App() {
-  const [entries, setEntries] = useState<CareerEntry[]>(career)
+  const { entries, setEntries, reset } = usePersistedEntries()
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const selectedEntry = selectedId ? entries.find(e => e.id === selectedId) ?? null : null
@@ -41,9 +41,22 @@ export default function App() {
             onClose={() => setSelectedId(null)}
           />
         ) : (
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', color: '#111827' }}>THROUGHLINE</span>
-            <span style={{ fontSize: 11, color: '#9ca3af', letterSpacing: '0.04em' }}>Select an entry to edit</span>
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', color: '#111827' }}>THROUGHLINE</span>
+              <span style={{ fontSize: 11, color: '#9ca3af', letterSpacing: '0.04em' }}>Select an entry to edit</span>
+            </div>
+            <button
+              onClick={() => {
+                if (window.confirm('Reset all entries to defaults? This cannot be undone.')) {
+                  reset()
+                  setSelectedId(null)
+                }
+              }}
+              style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 4, background: 'none', cursor: 'pointer', color: '#9ca3af', fontFamily: 'inherit', textAlign: 'left' }}
+            >
+              RESET TO DEFAULTS
+            </button>
           </div>
         )}
       </div>
