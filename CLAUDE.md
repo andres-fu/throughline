@@ -8,11 +8,14 @@ Read this before writing any code.
 ## Project Context
 
 **throughline** is a visual, interactive career timeline web app. It renders a career
-as an interactive D3 visualization — by company type, tech stack, projects, and time.
+as a pure SVG visualization — by company type, tech stack, team composition, and time.
 It is a personal learning project. Treat it like a real production codebase — clean, testable, and maintainable.
 
-Stack: React + TypeScript, Vite, Vitest + React Testing Library, D3.js, Tailwind CSS.
-No backend. Career data lives in `src/data/career.ts`.
+Stack: React + TypeScript, Vite, Vitest + React Testing Library, D3 (scaleLinear only).
+No backend. Career data lives in `src/data/career.ts`. State is persisted to localStorage.
+
+**Architectural rule: the timeline is pure SVG. No HTML elements inside `CareerTimeline`.
+All layout is computed geometrically before rendering. This rule applies to all future edits.**
 
 ---
 
@@ -73,13 +76,26 @@ Before marking any work done, verify:
 ```
 throughline/
 ├── docs/
-│   └── decisions/       # One markdown file per significant decision
+│   └── decisions/          # One markdown file per significant decision
 ├── src/
 │   ├── data/
-│   │   └── career.ts    # Source of truth — career data model and entries
-│   ├── utils/           # Pure transformer functions (most testable layer)
-│   ├── components/      # React components
-│   ├── views/           # Page-level views
+│   │   └── career.ts       # Source of truth — career data model and entries
+│   ├── utils/              # Pure transformer functions (most testable layer)
+│   │   ├── calculateDuration.ts
+│   │   ├── createBlankEntry.ts
+│   │   ├── exportSvgToPng.ts
+│   │   ├── formatDuration.ts
+│   │   ├── groupByCompanyType.ts
+│   │   ├── layoutChips.ts  # Geometry-first chip row layout for SVG
+│   │   └── sortEntriesByDate.ts
+│   ├── components/
+│   │   ├── CareerTimeline.tsx   # Pure SVG timeline — all layout computed before render
+│   │   ├── EntryDrawer.tsx      # Sidebar form with draft state pattern
+│   │   ├── CompanyInfoSection.tsx
+│   │   ├── RolesSection.tsx     # Includes collapsible team composition per role
+│   │   └── TechStackSection.tsx
+│   ├── hooks/
+│   │   └── usePersistedEntries.ts  # localStorage persistence
 │   └── main.tsx
 ├── tests/               # Mirrors src/ structure
 ├── CLAUDE.md            # This file
