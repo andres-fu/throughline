@@ -42,4 +42,39 @@ describe('EntryDrawer', () => {
     fireEvent.click(screen.getByTestId('drawer-save'))
     expect(onClose).toHaveBeenCalled()
   })
+
+  it('shows company name in uppercase in the header', () => {
+    render(<EntryDrawer entry={entry} onSave={() => {}} onClose={() => {}} />)
+    expect(screen.getByTestId('drawer-title')).toHaveTextContent('SHIPPO')
+  })
+
+  it('renders a backdrop', () => {
+    render(<EntryDrawer entry={entry} onSave={() => {}} onClose={() => {}} />)
+    expect(screen.getByTestId('drawer-backdrop')).toBeInTheDocument()
+  })
+
+  it('calls onClose when backdrop is clicked', () => {
+    const onClose = vi.fn()
+    render(<EntryDrawer entry={entry} onSave={() => {}} onClose={onClose} />)
+    fireEvent.click(screen.getByTestId('drawer-backdrop'))
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it('calls onClose when Escape is pressed', () => {
+    const onClose = vi.fn()
+    render(<EntryDrawer entry={entry} onSave={() => {}} onClose={onClose} />)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it('does not show unsaved indicator when draft matches entry', () => {
+    render(<EntryDrawer entry={entry} onSave={() => {}} onClose={() => {}} />)
+    expect(screen.queryByTestId('unsaved-indicator')).not.toBeInTheDocument()
+  })
+
+  it('shows unsaved indicator when draft differs from entry', () => {
+    render(<EntryDrawer entry={entry} onSave={() => {}} onClose={() => {}} />)
+    fireEvent.change(screen.getByTestId('company-name-input'), { target: { value: 'Changed' } })
+    expect(screen.getByTestId('unsaved-indicator')).toBeInTheDocument()
+  })
 })
